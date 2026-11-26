@@ -2,15 +2,17 @@ import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { z } from "zod";
+import type { taskDetails } from "./task-fields.ts";
 
 const storedTask = z.looseObject({ id: z.string(), title: z.string(), done: z.boolean() });
 const taskList = z.array(storedTask);
-type Task = z.infer<typeof storedTask>;
-type TaskChanges = Partial<Pick<Task, "title" | "done">>;
+export type Task = z.infer<typeof storedTask>;
+type TaskDetails = z.infer<typeof taskDetails>;
+type TaskChanges = Partial<Pick<Task, "title" | "done">> & TaskDetails;
 
 export interface TaskStore {
   list(): Task[];
-  create(title: string): Task;
+  create(title: string, details?: TaskDetails & { parentId?: string }): Task | undefined;
   update(id: string, changes: TaskChanges): Task | undefined;
   remove(id: string): boolean;
 }
@@ -32,9 +34,16 @@ export function createJsonTaskStore(filename: string): TaskStore {
   return {
     list,
 
-    create(title) {
-      const task = { id: randomUUID(), title, done: false };
-      save([...list(), task]);
+    create(title, details) {
+      const tasks = list();
+      if (
+        details?.parentId !== undefined &&
+        !tasks.some((task) => task.id === details.parentId && task.parentId === undefined)
+      ) {
+        return undefined;
+      }
+      const task = { id: randomUUID(), title, done: false, ...details };
+      save([...tasks, task]);
       return task;
     },
 
@@ -53,6 +62,9 @@ export function createJsonTaskStore(filename: string): TaskStore {
       const remaining = tasks.filter((task) => task.id !== id);
       if (remaining.length === tasks.length) return false;
 
+      for (const task of remaining) {
+        if (task.parentId === id) delete task.parentId;
+      }
       save(remaining);
       return true;
     },

@@ -1,15 +1,16 @@
 import { useEffect, useRef } from "react";
 import type { ChatMessage } from "../shared/chat.ts";
 
-const examplePrompts = ["提醒我买牛奶", "看看我的待办"];
+const examplePrompts = ["帮我记一下买牛奶", "看看我的待办", "今天先做什么？"];
 
 interface ChatHistoryProps {
   messages: ChatMessage[];
   pending: boolean;
+  disabled: boolean;
   onSelectPrompt: (prompt: string) => void;
 }
 
-export function ChatHistory({ messages, pending, onSelectPrompt }: ChatHistoryProps) {
+export function ChatHistory({ messages, pending, disabled, onSelectPrompt }: ChatHistoryProps) {
   const viewport = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (viewport.current) viewport.current.scrollTop = viewport.current.scrollHeight;
@@ -24,7 +25,7 @@ export function ChatHistory({ messages, pending, onSelectPrompt }: ChatHistoryPr
           <p>今天有什么待办？</p>
           <div className="examples">
             {examplePrompts.map((prompt) => (
-              <button key={prompt} onClick={() => onSelectPrompt(prompt)}>
+              <button key={prompt} disabled={disabled} onClick={() => onSelectPrompt(prompt)}>
                 {prompt}
                 <span aria-hidden="true">↗</span>
               </button>
