@@ -5,8 +5,8 @@
 安装 Node.js 24.12 或更高版本（含 npm）。在终端执行以下命令。
 
 ```sh
-git clone https://github.com/TokeNow/todo-agent.git
-cd todo-agent
+git clone https://github.com/dawn2351/Todo-Agent.git
+cd Todo-Agent
 npm ci
 npm run dev
 ```
